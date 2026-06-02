@@ -6,12 +6,12 @@ import streamlit as st
 
 # Ρύθμιση σελίδας
 st.set_page_config(
-    page_title="Βιορυθμοί με Διάγραμμα", page_icon="📈", layout="centered"
+    page_title="Βιορυθμοί (90 Ημέρες)", page_icon="📈", layout="centered"
 )
 
-st.title("📈 Δυναμικοί Βιορυθμοί")
+st.title("📈 Δυναμικοί Βιορυθμοί (90 Ημέρες)")
 st.write(
-    "Δείτε την πορεία του Φυσικού, Συναισθηματικού και Πνευματικού σας κύκλου για τις επόμενες 30 ημέρες."
+    "Δείτε την πορεία των κύκλων σας: 30 ημέρες στο παρελθόν και 60 ημέρες πρόβλεψης στο μέλλον."
 )
 
 # Εισαγωγή ημερομηνίας
@@ -24,20 +24,20 @@ birth_date = st.date_input(
 
 if st.button("Υπολογισμός & Σχεδίαση", type="primary"):
     current_date = datetime.now().date()
-
-    # Δημιουργία δεδομένων για τις επόμενες 30 ημέρες
-    dates = [current_date + timedelta(days=i) for i in range(30)]
     days_lived_today = (current_date - birth_date).days
 
+    # Λίστες για τα δεδομένα των 90 ημερών (-30 έως +60)
+    formatted_dates = []
     physical_values = []
     emotional_values = []
     intellectual_values = []
-    formatted_dates = []
 
-    for i in range(30):
-        t = days_lived_today + i
-        date_label = dates[i].strftime("%d/%m")
-        formatted_dates.append(dates[i])
+    # loop από το -30 έως το +60 (συνολικά 91 σημεία για να συμπεριλάβει και το σήμερα)
+    for i in range(-30, 61):
+        target_date = current_date + timedelta(days=i)
+        t = days_lived_today + i  # Συνολικές ημέρες ζωής για τη συγκεκριμένη ημερομηνία
+
+        formatted_dates.append(target_date)
 
         # Υπολογισμός ημιτόνων
         p = math.sin(2 * math.pi * t / 23) * 100
@@ -48,15 +48,15 @@ if st.button("Υπολογισμός & Σχεδίαση", type="primary"):
         emotional_values.append(e)
         intellectual_values.append(i_val)
 
-    # Εμφάνιση των σημερινών τιμών σε Metrics
+    # Υπολογισμός των σημερινών τιμών (αντιστοιχεί στο i=0, δηλαδή στη θέση 30 της λίστας)
     st.subheader(f"🗓️ Σήμερα (Ημέρες Ζωής: {days_lived_today})")
     col1, col2, col3 = st.columns(3)
-    col1.metric("Φυσικός (23η)", f"{round(physical_values[0], 1)}%")
-    col2.metric("Συναισθηματικός (28η)", f"{round(emotional_values[0], 1)}%")
-    col3.metric("Πνευματικός (33η)", f"{round(intellectual_values[0], 1)}%")
+    col1.metric("Φυσικός (23η)", f"{round(physical_values[30], 1)}%")
+    col2.metric("Συναισθηματικός (28η)", f"{round(emotional_values[30], 1)}%")
+    col3.metric("Πνευματικός (33η)", f"{round(intellectual_values[30], 1)}%")
 
     st.write("---")
-    st.subheader("📊 Πρόβλεψη Επόμενων 30 Ημερών")
+    st.subheader("📊 Διάγραμμα 90 Ημερών (-30 έως +60 ημέρες)")
 
     # Δημιουργία του Plotly Διαγράμματος
     fig = go.Figure()
@@ -72,7 +72,7 @@ if st.button("Υπολογισμός & Σχεδίαση", type="primary"):
         )
     )
 
-    # Συναισθηματικός Κύκλος (Μπλε)
+    # ... Συναισθηματικός Κύκλος (Μπλε)
     fig.add_trace(
         go.Scatter(
             x=formatted_dates,
@@ -104,6 +104,26 @@ if st.button("Υπολογισμός & Σχεδίαση", type="primary"):
         line=dict(color="gray", width=1.5, dash="dash"),
     )
 
+    # Κάθετη γραμμή για το "ΣΗΜΕΡΑ" ώστε να ξεχωρίζει το παρελθόν από το μέλλον
+    fig.add_shape(
+        type="line",
+        x0=current_date,
+        y0=-110,
+        x1=current_date,
+        y1=110,
+        line=dict(color="#FFA500", width=2, dash="dot"),
+    )
+
+    # Προσθήκη κειμένου (Annotation) για τη γραμμή "Σήμερα"
+    fig.add_annotation(
+        x=current_date,
+        y=105,
+        text="Σήμερα",
+        showarrow=False,
+        font=dict(color="#FFA500", size=12),
+        bgcolor="white",
+    )
+
     # Ρυθμίσεις εμφάνισης διαγράμματος
     fig.update_layout(
         xaxis_title="Ημερομηνία",
@@ -118,5 +138,6 @@ if st.button("Υπολογισμός & Σχεδίαση", type="primary"):
     st.plotly_chart(fig, use_container_width=True)
 
     st.info(
-        "💡 **Πώς να το διαβάσεις:** Όταν μια γραμμή τέμνει την οριζόντια διακεκομμένη γραμμή (0%), η ημέρα εκείνη θεωρείται **κρίσιμη** για τον αντίστοιχο τομέα."
+        "💡 **💡 Χρήσιμο:** Η κάθετη πορτοκαλί διακεκομμένη γραμμή δείχνει το **Σήμερα**. Αριστερά της βλέπετε πώς ήσασταν τις προηγούμενες 30 ημέρες και δεξιά την τάση για τις επόμενες 60."
     )
+
